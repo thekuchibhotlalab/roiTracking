@@ -1,23 +1,21 @@
-function manualTrackingGUI_new(datapath,imgTrack,roiRaw)
+function manualTrackingGUI_new(datapath,imgTrackRaw,roiRaw)
     % roiRaw is a cell of {1*nNeuron}, each element is (nCoord,2); with x and Y coordinates
     % Initialize variables
     global stackROI; 
-    if exist([datapath filesep 'stackROI.mat'], 'file') == 2 && ~exist("roiRaw")
-        roiRaw = {}; 
+    if exist([datapath filesep 'stackROI.mat'], 'file') == 2
         tempLoad = load([datapath filesep 'stackROI.mat']);
         stackROI = tempLoad.stackROI;
         disp('ROI mat file exist, loading ROI. Starting at roi number ')
-    elseif exist([datapath filesep 'stackROI.mat'], 'file') == 2 && exist("roiRaw")
-        error('ROI mat file exist, conflists with input ROI');
-    elseif exist("roiRaw")
+    else 
         disp('ROI mat file does not exist, initializing with input ROI');
+        if ~exist("roiRaw") || ~exist("imgTrackRaw")
+            error('No imgTrack or roiRaw input detected. Cannot initialize new ROI.');
+        end 
         stackROI.coordRaw = roiRaw;
         for i = 1:length(stackROI.coordRaw)
             stackROI.centroidRaw = [mean(stackROI.coordRaw{i}(:, 1)), mean(stackROI.coordRaw{i}(:, 2))];
         end 
-
-        stackROI.imgTrack = imgTrack; 
-
+        stackROI.imgTrack = imgTrackRaw; 
         stackROI.nDepth = size(stackROI.imgTrack,3); 
         nNeuron = length(stackROI.coordRaw);
         stackROI.coord = stackROI.coordRaw; % Original ROIs
@@ -31,11 +29,11 @@ function manualTrackingGUI_new(datapath,imgTrack,roiRaw)
         stackROI.nBatch = 0; 
 
         save([datapath filesep 'stackROI.mat'],'stackROI');
-    else
-        error('ROI mat file does not exist, no input ROI');
+    
     end
     nNeuron = length(stackROI.coordRaw);
     nBatch = stackROI.nBatch;
+    imgTrack = stackROI.imgTrack;
     nDepth = stackROI.nDepth; 
 
     screenSize = get(0, 'ScreenSize');
