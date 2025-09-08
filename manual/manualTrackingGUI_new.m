@@ -1,14 +1,16 @@
 function manualTrackingGUI_new(datapath,imgTrack,roiRaw)
     % roiRaw is a cell of {1*nNeuron}, each element is (nCoord,2); with x and Y coordinates
     % Initialize variables
-    if ~exist("roiRaw"); roiRaw = {}; end 
     global stackROI; 
-    if exist([datapath filesep 'stackROI.mat'], 'file') == 2
+    if exist([datapath filesep 'stackROI.mat'], 'file') == 2 && ~exist("roiRaw")
+        roiRaw = {}; 
         tempLoad = load([datapath filesep 'stackROI.mat']);
         stackROI = tempLoad.stackROI;
         disp('ROI mat file exist, loading ROI. Starting at roi number ')
-    else
-
+    elseif exist([datapath filesep 'stackROI.mat'], 'file') == 2 && exist("roiRaw")
+        error('ROI mat file exist, conflists with input ROI');
+    elseif exist("roiRaw")
+        disp('ROI mat file does not exist, initializing with input ROI');
         stackROI.coordRaw = roiRaw;
         for i = 1:length(stackROI.coordRaw)
             stackROI.centroidRaw = [mean(stackROI.coordRaw{i}(:, 1)), mean(stackROI.coordRaw{i}(:, 2))];
@@ -29,7 +31,8 @@ function manualTrackingGUI_new(datapath,imgTrack,roiRaw)
         stackROI.nBatch = 0; 
 
         save([datapath filesep 'stackROI.mat'],'stackROI');
-        disp('ROI mat file does not exist. Creating roi mat file.')
+    else
+        error('ROI mat file does not exist, no input ROI');
     end
     nNeuron = length(stackROI.coordRaw);
     nBatch = stackROI.nBatch;
@@ -321,6 +324,7 @@ function manualTrackingGUI_new(datapath,imgTrack,roiRaw)
         for i = 1:cols            
             fill(roiTemp.coordRedrawn{4,i}(:,2),roiTemp.coordRedrawn{4,i}(:,1),'black','FaceColor','none','EdgeColor','red');
         end 
+        title('Neurons tracked on img 4');
 
         save([datapath filesep 'stackROI.mat'],'stackROI');
         %pdfPath = [ops.roiTrackingPath filesep 'roiCheck']; mkdir(pdfPath);
